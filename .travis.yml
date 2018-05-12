@@ -133,7 +133,7 @@ install:
 script:
   - mkdir bin
   - cd bin
-  - cmake -GNinja $CMAKE_OPTIONS ..
+  - cmake -GNinja ${CMAKE_OPTIONS} ..
   - cmake --build . --target all
   - ctest --verbose
 
