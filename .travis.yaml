@@ -8,6 +8,7 @@ matrix:
       env: CC_COMPILER=clang-4.0 CXX_COMPILER=clang++-4.0
       addons:
         apt:
+          update: true
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-4.0
@@ -22,6 +23,7 @@ matrix:
       env: CC_COMPILER=clang-5.0 CXX_COMPILER=clang++-5.0
       addons:
         apt:
+          update: true
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-5.0
@@ -36,6 +38,7 @@ matrix:
       env: CC_COMPILER=gcc-6 CXX_COMPILER=g++-6
       addons:
         apt:
+          update: true
           sources:
             - ubuntu-toolchain-r-test
           packages:
@@ -49,6 +52,7 @@ matrix:
       env: CC_COMPILER=gcc-7 CXX_COMPILER=g++-7
       addons:
         apt:
+          update: true
           sources:
             - ubuntu-toolchain-r-test
           packages:
