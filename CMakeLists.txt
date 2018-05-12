@@ -13,7 +13,7 @@ add_definitions(-Wall -Werror -Wfatal-errors)
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
-find_package(Boost 1.61.0 COMPONENTS system program_options date_time filesystem regex log log_setup locale REQUIRED)
+find_package(Boost 1.54.0 COMPONENTS system program_options date_time filesystem regex log log_setup locale REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 
