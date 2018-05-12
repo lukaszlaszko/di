@@ -9,7 +9,8 @@ add_executable(unit_tests
 target_link_libraries(unit_tests
         di
         ${EXTERNAL_LIBRARIES}
-        ${Boost_LIBRARIES})
+        ${Boost_LIBRARIES}
+        ${RT_LIBRARY})
 
 add_dependencies(unit_tests
         di

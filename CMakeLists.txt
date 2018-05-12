@@ -9,6 +9,11 @@ include(ExternalProject)
 set(CMAKE_CXX_STANDARD 14)
 add_definitions(-Wall -Werror -Wfatal-errors)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -pthread")
+    set(RT_LIBRARY "rt")
+endif()
+
 # find boost
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
