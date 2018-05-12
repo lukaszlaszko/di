@@ -136,7 +136,8 @@ inline activation_context::activation<T, args_types...>& activation_context::act
 
 template <typename T, typename... args_types>
 template <typename D>
-inline activation_context::activation<T, args_types...>::conversion<D> activation_context::activation<T, args_types...>::as()
+inline typename activation_context::activation<T, args_types...>::template conversion<D>
+        activation_context::activation<T, args_types...>::as()
 {
     return conversion<D>(std::move(*this));
 }
