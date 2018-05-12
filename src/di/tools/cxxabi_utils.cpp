@@ -10,7 +10,7 @@ using namespace std;
 
 namespace di { namespace tools {
 
-string demangle(string mangled)
+string demangle(const string& mangled)
 {
     int status;
     auto realname = abi::__cxa_demangle(mangled.c_str(), 0, 0, &status);
