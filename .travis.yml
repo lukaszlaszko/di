@@ -104,7 +104,7 @@ install:
           rm -rf ${DEPS_DIR}/boost/include/boost/{compute,compute.hpp}
           touch ${DEPS_DIR}/boost/${BOOST_VERSION}_cached
         else
-          echo 'Using cached Boost ${BOOST_VERSION} libraries.'
+          echo "Using cached Boost ${BOOST_VERSION} libraries."
         fi
 
         export CMAKE_OPTIONS=${CMAKE_OPTIONS}" -DBOOST_ROOT=${DEPS_DIR}/boost"
@@ -133,7 +133,7 @@ install:
 script:
   - mkdir bin
   - cd bin
-  - cmake -GNinja .. $CMAKE_OPTIONS
+  - cmake -GNinja $CMAKE_OPTIONS ..
   - cmake --build . --target all
   - ctest --verbose
 
