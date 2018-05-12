@@ -21,7 +21,6 @@ matrix:
           packages:
             - clang-4.0
             - ninja-build
-            - libboost-all-dev
 
     - os: linux
       dist: trusty
@@ -36,7 +35,6 @@ matrix:
           packages:
             - clang-5.0
             - ninja-build
-            - libboost-all-dev
 
     - os: linux
       dist: trusty
@@ -50,7 +48,6 @@ matrix:
           packages:
             - g++-6
             - ninja-build
-            - libboost-all-dev
 
     - os: linux
       dist: trusty
@@ -64,7 +61,6 @@ matrix:
           packages:
             - g++-7
             - ninja-build
-            - libboost-all-dev
 
     - os: osx
       osx_image: xcode9.3
@@ -122,6 +118,6 @@ install:
 script:
   - mkdir bin
   - cd bin
-  - cmake -GNinja ..
+  - cmake -GNinja .. $CMAKE_OPTIONS
   - cmake --build . --target all
   - ctest --verbose
