@@ -20,8 +20,7 @@ matrix:
             - llvm-toolchain-trusty-4.0
           packages:
             - clang-4.0
-            - libc++-dev
-            - libc++abi-dev
+            - g++-6
             - ninja-build
 
     - os: linux
@@ -36,8 +35,7 @@ matrix:
             - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
-            - libc++-dev
-            - libc++abi-dev
+            - g++-6
             - ninja-build
 
     - os: linux
@@ -94,7 +92,7 @@ install:
           # configure and install
           if [ "$CXX" = "${CXX_COMPILER}" ]; then echo "using cc : ${CC_COMPILER} : ${CXX_COMPILER} ;" > $HOME/user-config.jam; fi
           ./bootstrap.sh --prefix=${DEPS_DIR}/boost/ --with-libraries=system,program_options,date_time,filesystem,regex,log
-          ./b2 -d0 install
+          ./b2 -j 4 -d0 install
           popd
           rm -rf ${DEPS_DIR}/boost/include/boost/{compute,compute.hpp}
           touch ${DEPS_DIR}/boost/${BOOST_VERSION}_cached
