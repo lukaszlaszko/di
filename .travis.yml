@@ -20,7 +20,7 @@ matrix:
             - llvm-toolchain-trusty-4.0
           packages:
             - clang-4.0
-            - g++-6
+            - libstdc++-6-dev
             - ninja-build
 
     - os: linux
@@ -35,7 +35,7 @@ matrix:
             - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
-            - g++-6
+            - libstdc++-6-dev
             - ninja-build
 
     - os: linux
