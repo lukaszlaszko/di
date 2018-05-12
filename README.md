@@ -482,7 +482,7 @@ Consider following example:
 #### Compilation
 
 Project has been verified to build with GCC 6/7 and Clang 4/5 on Ubuntu 14.04+. Boost 1.61 or newer
-has to be available on the build system.
+has to be available to the build system.
 
 Build steps:
 
@@ -510,6 +510,12 @@ $ cmake --build . --target all
 $ ctest --verbose
 ```
 
-
+To point cmake at custom installation of boost, pass `-DBOOST_ROOT=<path to boost root directory>` during configuration.
    
+If GCC 6+ is not installed on the build system, make sure `libstd++-6` or newer is installed. To install it from `apt` type:
 
+```
+$ sudo apt-get install libstdc++-6-dev
+```
+
+after prior registration of `ubuntu-toolchain-r-test` source channel.
