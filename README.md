@@ -1,4 +1,22 @@
+[![Build Status](https://travis-ci.org/lukaszlaszko/di.svg?branch=master)](https://travis-ci.org/lukaszlaszko/di)
+[![codecov](https://codecov.io/gh/lukaszlaszko/di/branch/master/graph/badge.svg)](https://codecov.io/gh/lukaszlaszko/di)
+[![CodeFactor](https://www.codefactor.io/repository/github/lukaszlaszko/di/badge)](https://www.codefactor.io/repository/github/lukaszlaszko/di)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
+
 ## Dependency Injection
+
+* [Introduction](#introduction)
+* [Concepts](#concepts)
+    * [Component registration](#registration)
+    * [Component activation](#activation)
+    * [Modules](#modules)
+    * [Interception](#interception)
+    * [Decoration](#decoration)
+    * [Annotations](#annotations)
+* [Usage](#usage)
+    * [Compilation](#compilation)
+    
+----    
 
 ### Introduction
 
@@ -14,9 +32,11 @@ are created using definitions registered in the previous step.
 Those two phases cannot non-interleave. Meaning component registration has to be completely finished before any activation takes place.
 No additional definitions can be added once advanced to activation phase.
 
-All components related to dependency injection are located in `tools::di` namespace.       
+All components related to dependency injection are located in `tools::di` namespace.
 
-### Component registration
+### Concepts       
+
+#### Registration
 
 Component registration is implemented with [definition_builder](src/di/definition_builder.hpp). Any object convertable to [std::function](http://en.cppreference.com/w/cpp/utility/functional/function)
 can be registered as a factory. A factory can define ownership and cleaup of allocated objects in 3 ways:
@@ -97,7 +117,7 @@ provides entry point to activation of dependencies and interaction with activati
 In the above `context.activate` is used to resolve a dependency from a context of factory method. 
         
 
-### Component activation
+#### Activation
 
 Once all definitions are registered with [definition_builder](src/di/definition_builder.hpp) that builder is used to create an 
 instance of [instance_activator](src/di/instance_activator.hpp). Instance activator allows instatiation of registered types in 3 different ways:
@@ -165,7 +185,7 @@ instance of [instance_activator](src/di/instance_activator.hpp). Instance activa
     smart pointer are destroyed component is going to be recycled.      
         
 
-### Modules
+#### Modules
 
 A module is a small class that can be used to bundle up a set of related components behind a ‘facade’ to simplify configuration 
 and deployment. The module exposes a deliberate, restricted set of configuration parameters that can vary independently of 
@@ -202,7 +222,7 @@ Example:
     instance_activator activator(std::move(builder));
     auto instance = activator.activate_default_unique<TestObject_1>();
 
-### Interception
+#### Interception
 
 An interceptor is a method injected just after a component is activated. In this way client code can subscribe to notifications
 about component instances activation with corresponding activation arguments.
@@ -231,7 +251,7 @@ Example:
 
 An interceptor can be defined as a lambda expression or any other object convertable to [std::function](http://en.cppreference.com/w/cpp/utility/functional/function).
 
-### Decoration
+#### Decoration
 
 [decorator pattern](https://en.wikipedia.org/wiki/Decorator_pattern) support has been implemented as a special type of interception. 
 Registered decorator function (or any functional object which can be converted into [std::function](http://en.cppreference.com/w/cpp/utility/functional/function))
@@ -418,7 +438,7 @@ Due to nature of C++ following two modes of decoration are supported:
     instead a wrapping `std::function<void()>` interface is used. In this way `decorator` wrapped into `std::function<void()>`
     can be used as a replacement of `component` produced by decoration factory.          
 
-### Annotations
+#### Annotations
 
 Annotation mechanism is used to pass context information into activation stack during activation. For instance, consider 
 passing detector base resolution in a way it would become available to all invoked factory methods:
@@ -457,5 +477,46 @@ Consider following example:
             make_annotation<surname_tag>(string("Smith")));
     
     auto instance = activator.activate_default_raii<TestObject_1>(std::move(annotations));
-   
+    
+### Usage
 
+#### Compilation
+
+Project has been verified to build with GCC 6/7 and Clang 4/5 on Ubuntu 14.04+. Boost 1.61 or newer
+has to be available to the build system.
+
+Build steps:
+
+1. Clone this repository:
+
+```
+$ git clone https://github.com/lukaszlaszko/di.git 
+```
+
+2. Create build directory and configure cmake from it:
+
+```
+$ cmake <location of cloned repository>
+```
+
+3. Build with configured build system:
+
+```
+$ cmake --build . --target all
+```
+
+4. Run unit tests
+
+```
+$ ctest --verbose
+```
+
+To point cmake at custom installation of boost, pass `-DBOOST_ROOT=<path to boost root directory>` during configuration.
+   
+If GCC 6+ is not installed on the build system, make sure `libstd++-6` or newer is installed. To install it from `apt` type:
+
+```
+$ sudo apt-get install libstdc++-6-dev
+```
+
+after prior registration of `ubuntu-toolchain-r-test` source channel.
