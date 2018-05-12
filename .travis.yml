@@ -46,7 +46,7 @@ matrix:
     - os: linux
       dist: trusty
       sudo: false
-      env: CC_COMPILER=gcc-6 CXX_COMPILER=g++-6 CODECOV=yes
+      env: CC_COMPILER=gcc-6 CXX_COMPILER=g++-6 CODECOV=no
       addons:
         apt:
           update: true
