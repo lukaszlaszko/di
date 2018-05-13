@@ -2,6 +2,7 @@
 [![codecov](https://codecov.io/gh/lukaszlaszko/di/branch/master/graph/badge.svg)](https://codecov.io/gh/lukaszlaszko/di)
 [![CodeFactor](https://www.codefactor.io/repository/github/lukaszlaszko/di/badge)](https://www.codefactor.io/repository/github/lukaszlaszko/di)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
+[![Documentation](https://codedocs.xyz/lukaszlaszko/di.svg)](https://codedocs.xyz/lukaszlaszko/di/)
 
 ## Dependency Injection
 
