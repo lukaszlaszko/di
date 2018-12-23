@@ -1904,11 +1904,15 @@ TEST(instance_activator, activate__decorate__unique_ptr)
 
     struct interface
     {
+        virtual ~interface() = default;
+
         virtual void method() = 0;
     };
 
     struct component : interface
     {
+        virtual ~component() = default;
+
         void method() override
         {
             component_count++;
@@ -1958,11 +1962,15 @@ TEST(instance_activator, activate__decorate__unique_ptr__multidecoration)
 
     struct interface
     {
+        virtual ~interface() = default;
+
         virtual void method() = 0;
     };
 
     struct component : interface
     {
+        virtual ~component() = default;
+
         void method() override
         {
             component_count++;
