@@ -547,13 +547,21 @@ repository provides latest redistributable package with project artefacts. In or
     
     [generators]
     cmake
-    ```    
+    ```   
+    
+4. Add `shadow` to your list of conan remotes:
+
+    ```
+    $ conan remote add shadow https://api.bintray.com/conan/lukaszlaszko/shadow
+    ``` 
     
 3. Install conan dependencies into your cmake build directory:
 
     ```
     $ conan install . -if <build dir>
     ```
+    
+    if for whatever reason installation of binary package fails, add `--build di` flag to the above. This will perform install the source package and compile all necessary modules.  
     
 4. To link against libraries provided by the package, either add:
 
