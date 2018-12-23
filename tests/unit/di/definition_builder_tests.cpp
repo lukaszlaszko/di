@@ -1041,11 +1041,15 @@ TEST(definition_builder, define_decorator__lambda__unique_pointer__context)
 {
     struct interface
     {
+        virtual ~interface() = default;
+
         virtual void method() { };
     };
 
     struct component : interface
     {
+        virtual ~component() = default;
+
         void method() override
         {
         }
@@ -1088,11 +1092,15 @@ TEST(definition_builder, define_decorator__lambda__unique_pointer__no_context)
 {
     struct interface
     {
+        virtual ~interface() = default;
+
         virtual void method() { };
     };
 
     struct component : interface
     {
+        virtual ~component() = default;
+
         void method() override
         {
         }
@@ -1221,11 +1229,15 @@ TEST(definition_builder,  define_decorator__unique_pointer__static_method__conte
 {
     struct interface
     {
+        virtual ~interface() = default;
+
         virtual void method() { };
     };
 
     struct component : interface
     {
+        virtual ~component() = default;
+
         void method() override
         {
         }
@@ -1272,11 +1284,15 @@ TEST(definition_builder,  define_decorator__unique_pointer__static_method__no_co
 {
     struct interface
     {
+        virtual ~interface() = default;
+
         virtual void method() { };
     };
 
     struct component : interface
     {
+        virtual ~component() = default;
+
         void method() override
         {
         }
@@ -1323,11 +1339,15 @@ TEST(definition_builder,  define_decorator__unique_pointer__non_static_method__c
 {
     struct interface
     {
+        virtual ~interface() = default;
+
         virtual void method() { };
     };
 
     struct component : interface
     {
+        virtual ~component() = default;
+
         void method() override
         {
         }
@@ -1377,11 +1397,15 @@ TEST(definition_builder,  define_decorator__unique_pointer__non_static_method__n
 {
     struct interface
     {
+        virtual ~interface() = default;
+
         virtual void method() { };
     };
 
     struct component : interface
     {
+        virtual ~component() = default;
+
         void method() override
         {
         }
