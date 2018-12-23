@@ -1,3 +1,4 @@
+[![Download](https://api.bintray.com/packages/lukaszlaszko/shadow/di%3Ashadow/images/download.svg) ](https://bintray.com/lukaszlaszko/shadow/di%3Ashadow/_latestVersion)
 [![Build Status](https://travis-ci.org/lukaszlaszko/di.svg?branch=master)](https://travis-ci.org/lukaszlaszko/di)
 [![codecov](https://codecov.io/gh/lukaszlaszko/di/branch/master/graph/badge.svg)](https://codecov.io/gh/lukaszlaszko/di)
 [![CodeFactor](https://www.codefactor.io/repository/github/lukaszlaszko/di/badge)](https://www.codefactor.io/repository/github/lukaszlaszko/di)
