@@ -573,7 +573,7 @@ repository provides latest redistributable package with project artefacts. In or
     for your target. Or specifically:
     
     ```cmake
-    target_link_libraries([..] ${CONAN_LIBS_di})
+    target_link_libraries([..] ${CONAN_LIBS_DI})
     ```    
     
 5. Reload cmake configuration.
