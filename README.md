@@ -16,6 +16,7 @@
     * [Annotations](#annotations)
 * [Usage](#usage)
     * [Compilation](#compilation)
+    * [Conan package](#conan-package)
     
 ----    
 
@@ -521,3 +522,50 @@ $ sudo apt-get install libstdc++-6-dev
 ```
 
 after prior registration of `ubuntu-toolchain-r-test` source channel.
+
+#### Conan package
+
+[Conan](https://docs.conan.io/en/latest) is an opena source package manager for C/C++. [Bintray shadow](https://bintray.com/lukaszlaszko/shadow)
+repository provides latest redistributable package with project artefacts. In order to use it in your cmake based project:
+
+1. Add following block to root `CMakeLists.txt` of your project:
+
+    ```cmake
+    if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+        include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+        conan_basic_setup()
+    else()
+        message(WARNING "The file conanbuildinfo.cmake doesn't exist, you have to run conan install first")
+    endif()
+    ```
+    
+2. Add `conanfile.txt` side by side with your top level `CMakeLists.txt`:
+
+    ```text
+    [requires]
+    di/1.0@shadow/stable
+    
+    [generators]
+    cmake
+    ```    
+    
+3. Install conan dependencies into your cmake build directory:
+
+    ```
+    $ conan install . -if <build dir>
+    ```
+    
+4. To link against libraries provided by the package, either add:
+
+    ```cmake
+    target_link_libraries([..] ${CONAN_LIBS})
+    ``` 
+    
+    for your target. Or specifically:
+    
+    ```cmake
+    target_link_libraries([..] ${CONAN_LIBS_di})
+    ```    
+    
+5. Reload cmake configuration.
+
