@@ -480,6 +480,48 @@ TEST(definition_builder, define_as_wrapping_type)
     ASSERT_TRUE(creator_as_wrapped);
 }
 
+TEST(definition_builder, define_type__no_constructor_args)
+{
+    struct MyType
+    {
+    };
+
+    definition_builder builder;
+    auto registration = builder.define_type<MyType>(sample_id);
+
+    ASSERT_EQ(registration.id(), sample_id);
+}
+
+TEST(definition_builder, define_explicit_type__value_constructor_args)
+{
+    struct MyType
+    {
+        MyType(string a)
+        {
+        }
+    };
+
+    definition_builder builder;
+    auto registration = builder.define_explicit_type<MyType, string>(sample_id);
+
+    ASSERT_EQ(registration.id(), sample_id);
+}
+
+TEST(definition_builder, define_explicit_type__rvalue_constructor_args)
+{
+    struct MyType
+    {
+        MyType(string&& a)
+        {
+        }
+    };
+
+    definition_builder builder;
+    auto registration = builder.define_explicit_type<MyType, string>(sample_id);
+
+    ASSERT_EQ(registration.id(), sample_id);
+}
+
 TEST(definition_builder, define_factory_with_context)
 {
     struct FactoryObject

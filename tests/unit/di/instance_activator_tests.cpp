@@ -1479,6 +1479,250 @@ TEST(instance_activator, activate_through_base_type_alias_shared_ptr)
     ASSERT_EQ(instance->field1_, sample_id);
 }
 
+TEST(instance_activator, activate_type__no_args)
+{
+    struct TestObject_Local
+    {
+
+    };
+
+    definition_builder builder;
+    builder.define_type<TestObject_Local>();
+
+    instance_activator activator(std::move(builder));
+    auto obj = activator.activate_default_unique<TestObject_Local>();
+    ASSERT_TRUE(obj);
+}
+
+TEST(instance_activator, activate_type__no_dependecies)
+{
+    struct TestObject_Local
+    {
+        TestObject_Local(int a)
+            :
+                a_(a)
+        {
+
+        }
+
+        int a_;
+    };
+
+    definition_builder builder;
+    builder.define_type<TestObject_Local>();
+    builder.define_default_instance<int>(67);
+
+    instance_activator activator(std::move(builder));
+    auto obj = activator.activate_default_unique<TestObject_Local>();
+    ASSERT_TRUE(obj);
+    ASSERT_EQ(obj->a_, 67);
+}
+
+TEST(instance_activator, activate_type__dependency_rvalue)
+{
+    struct TestObject_1
+    {
+        TestObject_1(int a)
+            :
+                a_(a)
+        {
+
+        }
+
+        int a_;
+    };
+
+    struct TestObject_2
+    {
+        TestObject_2(TestObject_1&& dependency)
+            :
+                dependency_(std::move(dependency))
+        {
+
+        }
+
+        TestObject_1 dependency_;
+    };
+
+    definition_builder builder;
+    builder.define_type<TestObject_1>();
+    builder.define_type<TestObject_2>();
+    builder.define_default_instance<int>(67);
+
+    instance_activator activator(std::move(builder));
+    auto obj = activator.activate_default_unique<TestObject_2>();
+    ASSERT_TRUE(obj);
+    ASSERT_EQ(obj->dependency_.a_, 67);
+}
+
+TEST(instance_activator, activate_type__dependency_unique_ptr)
+{
+    struct TestObject_1
+    {
+        TestObject_1(int a)
+                :
+                a_(a)
+        {
+
+        }
+
+        int a_;
+    };
+
+    struct TestObject_2
+    {
+        TestObject_2(unique_ptr<TestObject_1> dependency)
+            :
+                dependency_(std::move(dependency))
+        {
+
+        }
+
+        unique_ptr<TestObject_1> dependency_;
+    };
+
+    definition_builder builder;
+    builder.define_type<TestObject_1>();
+    builder.define_type<TestObject_2>();
+    builder.define_default_instance<int>(67);
+
+    instance_activator activator(std::move(builder));
+    auto obj = activator.activate_default_unique<TestObject_2>();
+    ASSERT_TRUE(obj);
+    ASSERT_EQ(obj->dependency_->a_, 67);
+}
+
+TEST(instance_activator, activate_type__dependency_unique_ptr_rvalue)
+{
+    struct TestObject_1
+    {
+        TestObject_1(int a)
+            :
+                a_(a)
+        {
+
+        }
+
+        int a_;
+    };
+
+    struct TestObject_2
+    {
+        TestObject_2(unique_ptr<TestObject_1>&& dependency)
+            :
+                dependency_(std::move(dependency))
+        {
+
+        }
+
+        unique_ptr<TestObject_1> dependency_;
+    };
+
+    definition_builder builder;
+    builder.define_type<TestObject_1>();
+    builder.define_type<TestObject_2>();
+    builder.define_default_instance<int>(67);
+
+    instance_activator activator(std::move(builder));
+    auto obj = activator.activate_default_unique<TestObject_2>();
+    ASSERT_TRUE(obj);
+    ASSERT_EQ(obj->dependency_->a_, 67);
+}
+
+TEST(instance_activator, activate_type__dependency_shared_ptr)
+{
+    struct TestObject_1
+    {
+        TestObject_1(int a)
+                :
+                a_(a)
+        {
+
+        }
+
+        int a_;
+    };
+
+    struct TestObject_2
+    {
+        TestObject_2(shared_ptr<TestObject_1> dependency)
+            :
+                dependency_(std::move(dependency))
+        {
+
+        }
+
+        shared_ptr<TestObject_1> dependency_;
+    };
+
+    definition_builder builder;
+    builder.define_type<TestObject_1>();
+    builder.define_type<TestObject_2>();
+    builder.define_default_instance<int>(67);
+
+    instance_activator activator(std::move(builder));
+    auto obj = activator.activate_default_unique<TestObject_2>();
+    ASSERT_TRUE(obj);
+    ASSERT_EQ(obj->dependency_->a_, 67);
+}
+
+TEST(instance_activator, activate_explicit_type)
+{
+    struct TestObject_Local
+    {
+        TestObject_Local(string&& a, int b)
+            :
+                a_(move(a)),
+                b_(b)
+        {
+        }
+
+        string a_;
+        int b_;
+    };
+
+    definition_builder builder;
+    builder.define_explicit_type<TestObject_Local, string, int>();
+    builder.define_default_instance<string>("abc");
+    builder.define_default_instance<int>(5);
+
+    instance_activator activator(std::move(builder));
+    auto obj = activator.activate_default_raii<TestObject_Local>();
+    ASSERT_EQ(obj.a_, "abc");
+    ASSERT_EQ(obj.b_, 5);
+}
+
+TEST(instance_activator, activate_explicit_type__base_type)
+{
+    struct interface
+    {
+        virtual ~interface() = default;
+    };
+
+    struct TestObject_Local : interface
+    {
+        TestObject_Local(string&& a, int b)
+            :
+                a_(move(a)),
+                b_(b)
+        {
+        }
+
+        string a_;
+        int b_;
+    };
+
+    definition_builder builder;
+    builder.define_explicit_type<TestObject_Local, string, int>().as<interface>();
+    builder.define_default_instance<string>("abc");
+    builder.define_default_instance<int>(5);
+
+    instance_activator activator(std::move(builder));
+    auto obj = activator.activate_default_unique<interface>();
+    ASSERT_TRUE(obj);
+    //ASSERT_EQ(typeid(*obj), typeid(TestObject_Local));
+}
+
 TEST(instance_activator, activate_with_annotations)
 {
     definition_builder builder;

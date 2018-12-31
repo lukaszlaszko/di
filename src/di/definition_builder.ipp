@@ -2,6 +2,8 @@
 
 #include "definition_builder.hpp"
 
+#include <di/tools/traits/ctor_traits.hpp>
+
 #include <sstream>
 #include <stdexcept>
 #include <type_traits>
@@ -269,6 +271,67 @@ inline definition_builder::registration<T, args_types...> definition_builder::de
         typename identity<std::function<std::unique_ptr<T>(args_types...)>>::type&& factory)
 {
     return define<T, args_types...>(definition::default_id, std::move(factory));
+}
+
+template <typename T>
+inline definition_builder::registration<T> definition_builder::define_type(const std::string& id)
+{
+    static_assert(
+            tools::ctor_count_n<T>::value > 0ul,
+            "No suitable, unique constructors found for automatic injection. Use explicit define_explicit_type instead.");
+    static_assert(
+            tools::ctor_count_n<T>::value < 2ul,
+            "Multiple suitable constructors found. Use explicit define_explicit_type instead.");
+
+    return try_define<T>(
+            id,
+            [id](const activation_context& context) -> T*
+            {
+                return magic_factory<T>(id, context);
+            },
+            {});
+}
+
+template <typename T>
+inline definition_builder::registration<T> definition_builder::define_type()
+{
+    return define_type<T>(definition::default_id);
+}
+
+template <typename T, typename... args_types>
+inline definition_builder::registration<T> definition_builder::define_explicit_type(const std::string& id)
+{
+    return try_define<T>(
+            id,
+            [id](const activation_context& context) -> T*
+            {
+                return new T(context.activate<args_types>(id)...);
+            },
+            {});
+}
+
+template <typename T, typename... args_types>
+inline definition_builder::registration<T> definition_builder::define_explicit_type()
+{
+    return define_explicit_type<T, args_types...>(definition::default_id);
+}
+
+template <typename T, typename... args_types>
+inline definition_builder::registration<T> definition_builder::define_instance(const std::string& id, args_types... args)
+{
+    return try_define<T>(
+            id,
+            [id, args...](const activation_context& context) -> T*
+            {
+                return new T(args...);
+            },
+            {});
+}
+
+template <typename T, typename... args_types>
+inline definition_builder::registration<T> definition_builder::define_default_instance(args_types... args)
+{
+    return define_instance<T, args_types...>(definition::default_id, args...);
 }
 
 template <typename T, typename... args_types>
@@ -583,6 +646,83 @@ inline definition_builder& definition_builder::define_module(const module_type&&
 
     stored_module(*this);
     return *this;
+}
+
+template <typename T>
+inline definition_builder::magic_argument<T>::magic_argument(const activation_context& context, size_t)
+    :
+        context_(context)
+{
+
+}
+
+template <typename T>
+template <typename U, typename _>
+inline definition_builder::magic_argument<T>::operator U()
+{
+    return context_.activate_default<U>();
+}
+
+template <typename T>
+template <typename U, typename _>
+inline definition_builder::magic_argument<T>::operator std::unique_ptr<U>()
+{
+    return context_.activate_default<U>();
+}
+
+template <typename T>
+template <typename U, typename _>
+inline definition_builder::magic_argument<T>::operator std::shared_ptr<U>()
+{
+    return context_.activate_default<U>();
+}
+
+template <typename T>
+template <typename U, typename _>
+inline definition_builder::magic_argument<T>::operator U&() const
+{
+    throw "Not implemented";
+}
+
+template <typename T>
+template <typename U, typename _>
+inline definition_builder::magic_argument<T>::operator U&&() const
+{
+    return context_.activate_default<U>();
+}
+
+template <typename T>
+template <typename U, typename _>
+inline definition_builder::magic_argument<T>::operator const U&() const
+{
+    throw "Not implemented";
+}
+
+template <typename T, size_t... indices>
+inline typename std::enable_if_t<sizeof...(indices) == 0, T>* definition_builder::magic_factory_impl(
+        const std::string& id,
+        const activation_context& context,
+        std::integer_sequence<size_t, indices...>)
+{
+    return new T();
+}
+
+template <typename T, size_t... indices>
+inline typename std::enable_if_t<sizeof...(indices) != 0, T>* definition_builder::magic_factory_impl(
+        const std::string& id,
+        const activation_context& context,
+        std::integer_sequence<size_t, indices...>)
+{
+    return new T(magic_argument<T>(context, indices)...);
+}
+
+template <typename T>
+inline T* definition_builder::magic_factory(
+        const std::string& id,
+        const activation_context& context)
+{
+    using sequence = std::make_integer_sequence<size_t, tools::ctor_args_count_n<T>::value>;
+    return magic_factory_impl<T>(id, context, sequence());
 }
 
 template <typename T, typename... args_types>

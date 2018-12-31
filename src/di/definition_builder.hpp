@@ -16,6 +16,7 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <utility>
+#include <di/tools/traits/ctor_traits.hpp>
 
 
 namespace di {
@@ -180,6 +181,68 @@ public:
     template <typename T, typename... args_types>
     registration<T, args_types...> define_default(
             typename identity<std::function<std::unique_ptr<T>(args_types...)>>::type&& factory);
+
+    /**
+     * @brief
+     * @tparam T
+     * @param id
+     * @return
+     */
+    template <typename T>
+    registration<T> define_type(const std::string& id);
+    /**
+     * @brief
+     * @tparam T
+     * @tparam args_types
+     * @return
+     */
+    template <typename T>
+    registration<T> define_type();
+    /**
+     * @brief
+     * @tparam T
+     * @tparam args_types
+     * @param id
+     * @return
+     */
+    template <typename T, typename... args_types>
+    registration<T> define_explicit_type(const std::string& id);
+    /**
+     * @brief
+     * @tparam T
+     * @tparam args_types
+     * @return
+     */
+    template <typename T, typename... args_types>
+    registration<T> define_explicit_type();
+
+    /**
+     * @brief Defines an instance of a type.
+     * @details
+     * An instance of a type will be created by calling constructor which matches passed arguments according to sfine
+     * rules.
+     *
+     * @tparam T Type, which instance should be registered.
+     * @tparam args_types Types of arguments passed to constructor.
+     * @param id Instance identifier.
+     * @param args Arguments which will be passed to the constructor when initialised.
+     * @return An instance of **registration** allowing further customisation of registered definition.
+     */
+    template <typename T, typename... args_types>
+    registration<T> define_instance(const std::string& id, args_types... args);
+    /**
+     * @brief Defines an type and arguments for its constructor.
+     * @details
+     * An instance of a type will be created by calling constructor which matches passed arguments according to sfine
+     * rules.
+     *
+     * @tparam T Type, which instance should be registered.
+     * @tparam args_types Types of arguments passed to constructor.
+     * @param args Arguments which will be passed to the constructor when initialised.
+     * @return An instance of **registration** allowing further customisation of registered definition.
+     */
+    template <typename T, typename... args_types>
+    registration<T> define_default_instance(args_types... args);
 
     /**
      * @brief Defines static method or C style function as a type factory under unique registration id.
@@ -804,6 +867,52 @@ private:
     friend instance_activator;
     template <typename T, typename... args_types>
     friend class registration;
+
+    template <typename T>
+    class magic_argument final
+    {
+    public:
+        explicit magic_argument(const activation_context& context, size_t);
+
+        template <typename U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
+        operator U();
+
+        template <typename U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
+        operator std::unique_ptr<U>();
+
+        template <typename U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
+        operator std::shared_ptr<U>();
+
+        template <typename U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
+        operator U&() const;
+
+        template <typename U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
+        operator U&&() const;
+
+        template <typename U, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
+        operator const U&() const;
+
+    private:
+        const activation_context& context_;
+
+    };
+
+    template <typename T, size_t... indices>
+    static typename std::enable_if_t<sizeof...(indices) == 0, T>* magic_factory_impl(
+            const std::string& id,
+            const activation_context& context,
+            std::integer_sequence<size_t, indices...>);
+
+    template <typename T, size_t... indices>
+    static typename std::enable_if_t<sizeof...(indices) != 0, T>* magic_factory_impl(
+            const std::string& id,
+            const activation_context& context,
+            std::integer_sequence<size_t, indices...>);
+
+    template <typename T>
+    static T* magic_factory(
+            const std::string& id,
+            const activation_context& context);
 
     template <typename T, typename... args_types>
     registration<T, args_types...> try_define(
