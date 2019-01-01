@@ -6,17 +6,31 @@
 
 namespace di { namespace tools {
 
+/**
+ * @brief Argument placeholder simulates presence of an argument to SFINE.
+ * @details
+ * @paragraph
+ * Definition of conversion operators in a placeholder presents constraints on a form of argument passing formats allowed
+ * for constructor arguments which can be resolves through automated type definition and constructor resolution.
+ *
+ * @paragraph
+ * A valid constructor argument can be passed only through a value or rvalue. It is not allowed to pass autoresolved argument
+ * through a reference or const reference. For this reason **operator U&() const** and **operator const U&() const** arent
+ * specified.
+ *
+ * @pargraph
+ * In order to avoid circular references, it is not allowed to define argument of same type as constructed type.
+ *
+ * @tparam T Type of constructed object this is an argument of.
+ * @tparam index Argument index. (internal use only)
+ */
 template <class T, size_t index>
 struct arg_placeholder
 {
     template <class U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
     operator U();
     template <class U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
-    operator U&() const;
-    template <class U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
     operator U&&() const;
-    template <class U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
-    operator const U&() const;
 };
 
 template <typename T, size_t... indices>

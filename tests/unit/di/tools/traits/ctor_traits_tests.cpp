@@ -9,6 +9,16 @@ using namespace std;
 using namespace di::tools;
 
 
+struct templated_test_type
+{
+    template <typename... args_types>
+    templated_test_type(args_types...)
+    {
+
+    }
+};
+
+
 TEST(ctor_traits, has_constructor__0_args)
 {
     struct test_type
@@ -176,6 +186,11 @@ TEST(ctor_traits, ctor_count)
     ASSERT_EQ(ctor_count<test_type_0>(), 1ul);
     ASSERT_EQ(ctor_count<test_type_1>(), 0ul);
     ASSERT_EQ(ctor_count<test_type_2>(), 3ul);
+}
+
+TEST(ctor_traits, ctor_count__template)
+{
+    ASSERT_EQ(ctor_count<templated_test_type>(), 256ul);
 }
 
 
