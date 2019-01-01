@@ -305,7 +305,8 @@ inline definition_builder::registration<T> definition_builder::define_explicit_t
             id,
             [id](const activation_context& context) -> T*
             {
-                return new T(context.activate<args_types>(id)...);
+                return new T(
+                        context.activate<typename argument_type<args_types>::type>(argument_id<args_types>::value)...);
             },
             {});
 }

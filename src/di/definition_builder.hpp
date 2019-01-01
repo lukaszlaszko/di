@@ -1,5 +1,6 @@
 #pragma once
 
+#include "argument.hpp"
 #include "definition.hpp"
 #include "decorator_definition.hpp"
 #include "interceptor_definition.hpp"

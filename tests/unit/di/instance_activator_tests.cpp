@@ -18,6 +18,8 @@ using namespace di::tools;
 
 
 const auto sample_id = "sample-id";
+char tag_1[] = "tag_1";
+char tag_2[] = "tag_2";
 
 struct TestObject_1
 {
@@ -1481,196 +1483,320 @@ TEST(instance_activator, activate_through_base_type_alias_shared_ptr)
 
 TEST(instance_activator, activate_type__no_args)
 {
-    struct TestObject_Local
+    struct component
     {
 
     };
 
     definition_builder builder;
-    builder.define_type<TestObject_Local>();
+    builder.define_type<component>();
 
     instance_activator activator(std::move(builder));
-    auto obj = activator.activate_default_unique<TestObject_Local>();
-    ASSERT_TRUE(obj);
+    auto created = activator.activate_default_unique<component>();
+    ASSERT_TRUE(created);
 }
 
-TEST(instance_activator, activate_type__no_dependecies)
+TEST(instance_activator, activate_type__arg_value)
 {
-    struct TestObject_Local
+    struct component
     {
-        TestObject_Local(int a)
+        component(int arg0)
             :
-                a_(a)
+                field_(arg0)
         {
 
         }
 
-        int a_;
+        int field_;
     };
 
     definition_builder builder;
-    builder.define_type<TestObject_Local>();
+    builder.define_type<component>();
     builder.define_default_instance<int>(67);
 
     instance_activator activator(std::move(builder));
-    auto obj = activator.activate_default_unique<TestObject_Local>();
-    ASSERT_TRUE(obj);
-    ASSERT_EQ(obj->a_, 67);
+    auto created = activator.activate_default_unique<component>();
+    ASSERT_TRUE(created);
+    ASSERT_EQ(created->field_, 67);
 }
 
-TEST(instance_activator, activate_type__dependency_rvalue)
+TEST(instance_activator, activate_type__arg_rvalue)
 {
-    struct TestObject_1
+    struct component
     {
-        TestObject_1(int a)
+        component(string&& arg0)
             :
-                a_(a)
+                field_(arg0)
         {
 
         }
 
-        int a_;
+        string field_;
     };
 
-    struct TestObject_2
+    definition_builder builder;
+    builder.define_type<component>();
+    builder.define_default_instance<string>("abc_123");
+
+    instance_activator activator(std::move(builder));
+    auto created = activator.activate_default_unique<component>();
+    ASSERT_TRUE(created);
+    ASSERT_EQ(created->field_, "abc_123");
+}
+
+TEST(instance_activator, activate_type__cascade_dependency_rvalue)
+{
+    struct component_1
     {
-        TestObject_2(TestObject_1&& dependency)
+        component_1(int arg0) : field_(arg0)
+        {
+
+        }
+
+        int field_;
+    };
+
+    struct component_2
+    {
+        component_2(component_1&& dependency)
+            : dependency_(std::move(dependency))
+        {
+
+        }
+
+        component_1 dependency_;
+    };
+
+    definition_builder builder;
+    builder.define_type<component_1>();
+    builder.define_type<component_2>();
+    builder.define_default_instance<int>(67);
+
+    instance_activator activator(std::move(builder));
+    auto created = activator.activate_default_unique<component_2>();
+    ASSERT_TRUE(created);
+    ASSERT_EQ(created->dependency_.field_, 67);
+}
+
+TEST(instance_activator, activate_type__cascade_dependency_unique_ptr)
+{
+    struct component_1
+    {
+        component_1(int arg0) : field_(arg0)
+        {
+
+        }
+
+        int field_;
+    };
+
+    struct component_2
+    {
+        component_2(unique_ptr<component_1> dependency)
+            : dependency_(std::move(dependency))
+        {
+
+        }
+
+        unique_ptr<component_1> dependency_;
+    };
+
+    definition_builder builder;
+    builder.define_type<component_1>();
+    builder.define_type<component_2>();
+    builder.define_default_instance<int>(67);
+
+    instance_activator activator(std::move(builder));
+    auto created = activator.activate_default_unique<component_2>();
+    ASSERT_TRUE(created);
+    ASSERT_EQ(created->dependency_->field_, 67);
+}
+
+TEST(instance_activator, activate_type__cascade_dependency_unique_ptr_rvalue)
+{
+    struct component_1
+    {
+        component_1(int arg0) : field_(arg0)
+        {
+
+        }
+
+        int field_;
+    };
+
+    struct component_2
+    {
+        component_2(unique_ptr<component_1>&& dependency)
             :
                 dependency_(std::move(dependency))
         {
 
         }
 
-        TestObject_1 dependency_;
+        unique_ptr<component_1> dependency_;
     };
 
     definition_builder builder;
-    builder.define_type<TestObject_1>();
-    builder.define_type<TestObject_2>();
+    builder.define_type<component_1>();
+    builder.define_type<component_2>();
     builder.define_default_instance<int>(67);
 
     instance_activator activator(std::move(builder));
-    auto obj = activator.activate_default_unique<TestObject_2>();
-    ASSERT_TRUE(obj);
-    ASSERT_EQ(obj->dependency_.a_, 67);
+    auto created = activator.activate_default_unique<component_2>();
+    ASSERT_TRUE(created);
+    ASSERT_EQ(created->dependency_->field_, 67);
 }
 
-TEST(instance_activator, activate_type__dependency_unique_ptr)
+TEST(instance_activator, activate_type__cascade_dependency_shared_ptr)
 {
-    struct TestObject_1
+    struct component_1
     {
-        TestObject_1(int a)
-                :
-                a_(a)
+        component_1(int arg0) : field_(arg0)
         {
 
         }
 
-        int a_;
+        int field_;
     };
 
-    struct TestObject_2
+    struct component_2
     {
-        TestObject_2(unique_ptr<TestObject_1> dependency)
-            :
-                dependency_(std::move(dependency))
+        component_2(shared_ptr<component_1> dependency) : dependency_(std::move(dependency))
         {
 
         }
 
-        unique_ptr<TestObject_1> dependency_;
+        shared_ptr<component_1> dependency_;
     };
 
     definition_builder builder;
-    builder.define_type<TestObject_1>();
-    builder.define_type<TestObject_2>();
+    builder.define_type<component_1>();
+    builder.define_type<component_2>();
     builder.define_default_instance<int>(67);
 
     instance_activator activator(std::move(builder));
-    auto obj = activator.activate_default_unique<TestObject_2>();
-    ASSERT_TRUE(obj);
-    ASSERT_EQ(obj->dependency_->a_, 67);
+    auto created = activator.activate_default_unique<component_2>();
+    ASSERT_TRUE(created);
+    ASSERT_EQ(created->dependency_->field_, 67);
 }
 
-TEST(instance_activator, activate_type__dependency_unique_ptr_rvalue)
+TEST(instance_activator, activate_type__cascade_dependency_shared_ptr_rvalue)
 {
-    struct TestObject_1
+    struct component_1
     {
-        TestObject_1(int a)
-            :
-                a_(a)
+        component_1(int arg0) : field_(arg0)
         {
 
         }
 
-        int a_;
+        int field_;
     };
 
-    struct TestObject_2
+    struct component_2
     {
-        TestObject_2(unique_ptr<TestObject_1>&& dependency)
-            :
-                dependency_(std::move(dependency))
+        component_2(shared_ptr<component_1>&& dependency)
+                : dependency_(std::move(dependency))
         {
 
         }
 
-        unique_ptr<TestObject_1> dependency_;
+        shared_ptr<component_1> dependency_;
     };
 
     definition_builder builder;
-    builder.define_type<TestObject_1>();
-    builder.define_type<TestObject_2>();
+    builder.define_type<component_1>();
+    builder.define_type<component_2>();
     builder.define_default_instance<int>(67);
 
     instance_activator activator(std::move(builder));
-    auto obj = activator.activate_default_unique<TestObject_2>();
-    ASSERT_TRUE(obj);
-    ASSERT_EQ(obj->dependency_->a_, 67);
+    auto created = activator.activate_default_unique<component_2>();
+    ASSERT_TRUE(created);
+    ASSERT_EQ(created->dependency_->field_, 67);
 }
 
-TEST(instance_activator, activate_type__dependency_shared_ptr)
+TEST(instance_activator, activate_type__as_interface__unique_ptr)
 {
-    struct TestObject_1
+    struct interface
     {
-        TestObject_1(int a)
-                :
-                a_(a)
-        {
-
-        }
-
-        int a_;
+        virtual ~interface() = default;
     };
 
-    struct TestObject_2
+    struct component_1 : interface
     {
-        TestObject_2(shared_ptr<TestObject_1> dependency)
-            :
-                dependency_(std::move(dependency))
+
+    };
+
+    struct component_2
+    {
+        component_2(unique_ptr<interface>&& iface)
+            : iface_(std::move(iface))
         {
 
         }
 
-        shared_ptr<TestObject_1> dependency_;
+        unique_ptr<interface> iface_;
     };
 
     definition_builder builder;
-    builder.define_type<TestObject_1>();
-    builder.define_type<TestObject_2>();
-    builder.define_default_instance<int>(67);
+    builder.define_type<component_1>().as<interface>();
+    builder.define_type<component_2>();
 
     instance_activator activator(std::move(builder));
-    auto obj = activator.activate_default_unique<TestObject_2>();
-    ASSERT_TRUE(obj);
-    ASSERT_EQ(obj->dependency_->a_, 67);
+    auto created = activator.activate_default_unique<component_2>();
+    ASSERT_TRUE(created);
 }
 
-TEST(instance_activator, activate_explicit_type)
+TEST(instance_activator, activate_type__as_interface__shared_ptr)
 {
-    struct TestObject_Local
+    struct interface
     {
-        TestObject_Local(string&& a, int b)
+        virtual ~interface() = default;
+    };
+
+    struct component_1 : interface
+    {
+
+    };
+
+    struct component_2
+    {
+        component_2(shared_ptr<interface> iface)
+                : iface_(iface)
+        {
+
+        }
+
+        shared_ptr<interface> iface_;
+    };
+
+    definition_builder builder;
+    builder.define_type<component_1>().as<interface>();
+    builder.define_type<component_2>();
+
+    instance_activator activator(std::move(builder));
+    auto created = activator.activate_default_unique<component_2>();
+    ASSERT_TRUE(created);
+}
+
+TEST(instance_activator, activate_explicit_type__no_args)
+{
+    struct component
+    {
+    };
+
+    definition_builder builder;
+    builder.define_explicit_type<component>();
+
+    instance_activator activator(std::move(builder));
+    auto created = activator.activate_default_unique<component>();
+    ASSERT_TRUE(created);
+}
+
+TEST(instance_activator, activate_explicit_type__with_args)
+{
+    struct component
+    {
+        component(string&& a, int b)
             :
                 a_(move(a)),
                 b_(b)
@@ -1682,14 +1808,14 @@ TEST(instance_activator, activate_explicit_type)
     };
 
     definition_builder builder;
-    builder.define_explicit_type<TestObject_Local, string, int>();
+    builder.define_explicit_type<component, string, int>();
     builder.define_default_instance<string>("abc");
     builder.define_default_instance<int>(5);
 
     instance_activator activator(std::move(builder));
-    auto obj = activator.activate_default_raii<TestObject_Local>();
-    ASSERT_EQ(obj.a_, "abc");
-    ASSERT_EQ(obj.b_, 5);
+    auto created = activator.activate_default_raii<component>();
+    ASSERT_EQ(created.a_, "abc");
+    ASSERT_EQ(created.b_, 5);
 }
 
 TEST(instance_activator, activate_explicit_type__base_type)
@@ -1699,9 +1825,9 @@ TEST(instance_activator, activate_explicit_type__base_type)
         virtual ~interface() = default;
     };
 
-    struct TestObject_Local : interface
+    struct component : interface
     {
-        TestObject_Local(string&& a, int b)
+        component(string&& a, int b)
             :
                 a_(move(a)),
                 b_(b)
@@ -1713,14 +1839,47 @@ TEST(instance_activator, activate_explicit_type__base_type)
     };
 
     definition_builder builder;
-    builder.define_explicit_type<TestObject_Local, string, int>().as<interface>();
+    builder.define_explicit_type<component, string, int>().as<interface>();
     builder.define_default_instance<string>("abc");
     builder.define_default_instance<int>(5);
 
     instance_activator activator(std::move(builder));
-    auto obj = activator.activate_default_unique<interface>();
-    ASSERT_TRUE(obj);
-    //ASSERT_EQ(typeid(*obj), typeid(TestObject_Local));
+    auto created = activator.activate_default_unique<interface>();
+    ASSERT_TRUE(created);
+}
+
+TEST(instance_activator, activate_explicit_type__argument_id)
+{
+    struct component
+    {
+        component(int field) : field_(field)
+        {
+        }
+
+        int field_;
+    };
+
+    {
+        definition_builder builder;
+        builder.define_explicit_type<component, argument<int, tag_1>>();
+        builder.define_instance<int>(tag_1, 5);
+        builder.define_instance<int>(tag_2, 11);
+
+        instance_activator activator(std::move(builder));
+        auto created = activator.activate_default_raii<component>();
+        ASSERT_EQ(created.field_, 5);
+    }
+
+    {
+        definition_builder builder;
+        builder.define_explicit_type<component, argument<int, tag_2>>();
+        builder.define_instance<int>(tag_1, 5);
+        builder.define_instance<int>(tag_2, 11);
+
+        instance_activator activator(std::move(builder));
+        auto created = activator.activate_default_raii<component>();
+        ASSERT_EQ(created.field_, 11);
+    }
 }
 
 TEST(instance_activator, activate_with_annotations)
