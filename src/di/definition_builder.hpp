@@ -22,6 +22,13 @@
 
 namespace di {
 
+/**
+ * @brief Used for registration of type factories.
+ * @details
+ * An instance of **definition_builder** provides a platform for registration of types and type
+ * factories. Based on these definitions **instance_activator**, is able to construct types and
+ * their dependencies.
+ */
 class definition_builder final
 {
 public:
@@ -31,27 +38,75 @@ public:
         using type = T;
     };
 
+    /**
+     * @brief Represents a registered type factory.
+     * @tparam T Type this registration is for.
+     * @tparam args_types Required type arguments.
+     */
     template <typename T, typename... args_types>
-    class registration
+    class registration final
     {
     public:
         using registered_type = T;
         using with_types = tools::argument_types<args_types...>;
 
+        /**
+         * @brief Registration identifier.
+         * @details
+         * A registration is primarily identified by the type which creation it describes and required parameters. However,
+         * it is possible to define more than one registration with identical signature. To distinguish them and a string
+         * identifier is used.
+         * @return A string identifier of this registration.
+         */
         const std::string& id() const;
 
+        /**
+         * @brief Creates a derived registration for type **T** is convertable into.
+         * @tparam D
+         * @return
+         */
         template <typename D>
         typename std::enable_if_t<std::is_base_of<D, T>::value, registration<D, args_types...>> as();
 
+        /**
+         * @brief Creates a derived registration for the base type of **T**.
+         * @details
+         * @paragraph
+         * Consider this example:
+         * @code
+         *
+         *
+         *
+         * @endcode
+         *
+         *
+         * @tparam D Base type, type **T** derived from.
+         * @return
+         */
         template <typename D>
         typename std::enable_if_t<!std::is_base_of<D, T>::value, registration<D, args_types...>> as();
 
+        /**
+         * @brief Annotates registration with a range of objects.
+         * @tparam annotation_types Types of annotation objects.
+         * @param annotations Const references to annotating objects.
+         * @return Self reference.
+         */
         template <typename... annotation_types>
         registration& annotate(const annotation_types&... annotations);
-
+        /**
+         * @brief
+         * @tparam annotation_types
+         * @param annotations
+         * @return
+         */
         template <typename... annotation_types>
         registration& annotate(annotation_types&&... annotations);
 
+        /**
+         * @brief Retrieves a reference to the underlying definition.
+         * @return A reference to the underlying definition.
+         */
         operator definition&();
 
     private:

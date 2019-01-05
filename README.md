@@ -10,6 +10,8 @@
 * [Introduction](#introduction)
 * [Concepts](#concepts)
     * [Component registration](#registration)
+        * [Type registration](#type-registration)
+        * [Factory registration](#factory-registration)
     * [Component activation](#activation)
     * [Modules](#modules)
     * [Interception](#interception)
@@ -41,8 +43,18 @@ All components related to dependency injection are located in `tools::di` namesp
 
 #### Registration
 
-Component registration is implemented with [definition_builder](src/di/definition_builder.hpp). Any object convertable to [std::function](http://en.cppreference.com/w/cpp/utility/functional/function)
-can be registered as a factory. A factory can define ownership and cleaup of allocated objects in 3 ways:
+Component registration is implemented with [definition_builder](src/di/definition_builder.hpp). Components can be registered as either types or their factories. 
+
+##### Type registration
+
+Components can be registered by type:
+
+Types with more than one non-copy, non-move constructor can be only registered through explicit definition using **define_explicit_type**.
+
+##### Factory registration
+
+Any object convertible to [std::function](http://en.cppreference.com/w/cpp/utility/functional/function)
+can be registered as a factory. A factory can define ownership and cleanup of allocated objects in 3 ways:
   
 * **pointer**
 
@@ -118,8 +130,7 @@ provides entry point to activation of dependencies and interaction with activati
     [...]     
 
 In the above `context.activate` is used to resolve a dependency from a context of factory method. 
-        
-
+ 
 #### Activation
 
 Once all definitions are registered with [definition_builder](src/di/definition_builder.hpp) that builder is used to create an 
