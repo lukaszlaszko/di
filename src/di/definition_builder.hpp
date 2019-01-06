@@ -1,5 +1,6 @@
 #pragma once
 
+#include "argument.hpp"
 #include "definition.hpp"
 #include "decorator_definition.hpp"
 #include "interceptor_definition.hpp"
@@ -16,10 +17,18 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <utility>
+#include <di/tools/traits/ctor_traits.hpp>
 
 
 namespace di {
 
+/**
+ * @brief Used for registration of type factories.
+ * @details
+ * An instance of **definition_builder** provides a platform for registration of types and type
+ * factories. Based on these definitions **instance_activator**, is able to construct types and
+ * their dependencies.
+ */
 class definition_builder final
 {
 public:
@@ -29,27 +38,105 @@ public:
         using type = T;
     };
 
+    /**
+     * @brief Represents a registered type factory.
+     * @tparam T Type this registration is for.
+     * @tparam args_types Required type arguments.
+     */
     template <typename T, typename... args_types>
-    class registration
+    class registration final
     {
     public:
         using registered_type = T;
         using with_types = tools::argument_types<args_types...>;
 
+        /**
+         * @brief Registration identifier.
+         * @details
+         * A registration is primarily identified by the type which creation it describes and required parameters. However,
+         * it is possible to define more than one registration with identical signature. To distinguish them and a string
+         * identifier is used.
+         * @return A string identifier of this registration.
+         */
         const std::string& id() const;
 
+        /**
+         * @brief Creates a derived registration for the base type of **T**.
+         * @details
+         * @paragraph
+         * Consider the below example:
+         * @code
+         *
+         * [...]
+         *
+         * struct BaseObject
+         * {
+         *      BaseObject(string&& id) : field1_(std::move(id))
+         *      {
+         *
+         *      }
+         *
+         *      string field1_;
+         * };
+         *
+         * struct DerivedObject : BaseObject
+         * {
+         *      DerivedObject(string&& id) : BaseObject(std::move(id))
+         *      { }
+         * };
+         *
+         * definition_builder builder;
+         * builder.define_default<DerivedObject>([]() -> DerivedObject
+         *      {
+         *          return { sample_id };
+         *      })
+         *      .as<BaseObject>();
+         *
+         * instance_activator activator(std::move(builder));
+         * auto instance = activator.activate_default_unique<BaseObject>();
+         *
+         * [...]
+         * @endcode
+         *
+         * The above registers a factory for type **BaseObject**. However, additionally call to **as** on created registration
+         * creates a drived, addtional registration for base type **BaseObject**. In this way a polimorphic registration
+         * of type can be added.
+         *
+         * @tparam D Base type, type **T** derived from.
+         * @return A polimorphic registration for type **D** with underlying implementation type **T**.
+         */
         template <typename D>
         typename std::enable_if_t<std::is_base_of<D, T>::value, registration<D, args_types...>> as();
 
+        /**
+         * @brief
+         * @tparam D
+         * @return
+         */
         template <typename D>
         typename std::enable_if_t<!std::is_base_of<D, T>::value, registration<D, args_types...>> as();
 
+        /**
+         * @brief Annotates registration with a range of objects.
+         * @tparam annotation_types Types of annotation objects.
+         * @param annotations Const references to annotating objects.
+         * @return Self reference.
+         */
         template <typename... annotation_types>
         registration& annotate(const annotation_types&... annotations);
-
+        /**
+         * @brief
+         * @tparam annotation_types
+         * @param annotations
+         * @return
+         */
         template <typename... annotation_types>
         registration& annotate(annotation_types&&... annotations);
 
+        /**
+         * @brief Retrieves a reference to the underlying definition.
+         * @return A reference to the underlying definition.
+         */
         operator definition&();
 
     private:
@@ -180,6 +267,68 @@ public:
     template <typename T, typename... args_types>
     registration<T, args_types...> define_default(
             typename identity<std::function<std::unique_ptr<T>(args_types...)>>::type&& factory);
+
+    /**
+     * @brief
+     * @tparam T
+     * @param id
+     * @return
+     */
+    template <typename T>
+    registration<T> define_type(const std::string& id);
+    /**
+     * @brief
+     * @tparam T
+     * @tparam args_types
+     * @return
+     */
+    template <typename T>
+    registration<T> define_type();
+    /**
+     * @brief
+     * @tparam T
+     * @tparam args_types
+     * @param id
+     * @return
+     */
+    template <typename T, typename... args_types>
+    registration<T> define_explicit_type(const std::string& id);
+    /**
+     * @brief
+     * @tparam T
+     * @tparam args_types
+     * @return
+     */
+    template <typename T, typename... args_types>
+    registration<T> define_explicit_type();
+
+    /**
+     * @brief Defines an instance of a type.
+     * @details
+     * An instance of a type will be created by calling constructor which matches passed arguments according to sfine
+     * rules.
+     *
+     * @tparam T Type, which instance should be registered.
+     * @tparam args_types Types of arguments passed to constructor.
+     * @param id Instance identifier.
+     * @param args Arguments which will be passed to the constructor when initialised.
+     * @return An instance of **registration** allowing further customisation of registered definition.
+     */
+    template <typename T, typename... args_types>
+    registration<T> define_instance(const std::string& id, args_types... args);
+    /**
+     * @brief Defines an type and arguments for its constructor.
+     * @details
+     * An instance of a type will be created by calling constructor which matches passed arguments according to sfine
+     * rules.
+     *
+     * @tparam T Type, which instance should be registered.
+     * @tparam args_types Types of arguments passed to constructor.
+     * @param args Arguments which will be passed to the constructor when initialised.
+     * @return An instance of **registration** allowing further customisation of registered definition.
+     */
+    template <typename T, typename... args_types>
+    registration<T> define_default_instance(args_types... args);
 
     /**
      * @brief Defines static method or C style function as a type factory under unique registration id.
@@ -804,6 +953,43 @@ private:
     friend instance_activator;
     template <typename T, typename... args_types>
     friend class registration;
+
+    template <typename T>
+    class magic_argument final
+    {
+    public:
+        explicit magic_argument(const activation_context& context, size_t);
+
+        template <typename U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
+        operator U();
+
+        template <typename U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
+        operator std::unique_ptr<U>();
+
+        template <typename U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
+        operator std::shared_ptr<U>();
+
+    private:
+        const activation_context& context_;
+
+    };
+
+    template <typename T, size_t... indices>
+    static typename std::enable_if_t<sizeof...(indices) == 0, T>* magic_factory_impl(
+            const std::string& id,
+            const activation_context& context,
+            std::integer_sequence<size_t, indices...>);
+
+    template <typename T, size_t... indices>
+    static typename std::enable_if_t<sizeof...(indices) != 0, T>* magic_factory_impl(
+            const std::string& id,
+            const activation_context& context,
+            std::integer_sequence<size_t, indices...>);
+
+    template <typename T>
+    static T* magic_factory(
+            const std::string& id,
+            const activation_context& context);
 
     template <typename T, typename... args_types>
     registration<T, args_types...> try_define(

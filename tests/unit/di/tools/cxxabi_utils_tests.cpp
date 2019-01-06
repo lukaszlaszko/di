@@ -21,3 +21,9 @@ TEST(cxxabi_utils, demangle)
     string demangled = demangle(name);
     ASSERT_EQ(demangled, "sample_type");
 }
+
+TEST(cxxabi_utils, demangle__not_a_valid_name)
+{
+    string demangled = demangle("something++");
+    ASSERT_EQ(demangled, "something++");
+}
