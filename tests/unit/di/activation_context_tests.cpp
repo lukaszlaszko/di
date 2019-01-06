@@ -11,6 +11,7 @@
 
 using namespace std;
 using namespace di;
+using namespace testing;
 
 struct TestObject_1
 {
@@ -249,7 +250,7 @@ TEST(activation_context, activate_default_with_description)
     TestObject_1 instance = context.activate_default_with_description<TestObject_1>(description);
 }
 
-TEST(instance_activator, activate_default_with_description_with_single_parameter)
+TEST(activation_context, activate_default_with_description_with_single_parameter)
 {
     constexpr auto description = "This is a description";
 
@@ -267,4 +268,71 @@ TEST(instance_activator, activate_default_with_description_with_single_parameter
     TestObject_1 instance = context.activate_default_with_description<TestObject_1>(description).with(parameter);
 
     ASSERT_EQ(instance.field1_, parameter);
+}
+
+TEST(activation_context, access_parent_during_activation)
+{
+    struct component
+    {
+        component(int arg0)
+        {}
+    };
+
+    definition_builder builder;
+    builder.define_type<component>();
+    builder.define_default_instance<int>(5);
+
+    auto intercepted_count = 0ul;
+    builder.define_interceptor<int>([&intercepted_count](const activation_context& ctx)
+    {
+        EXPECT_TRUE(ctx.parent());
+        EXPECT_TRUE(ctx.parent()->parent());
+        EXPECT_FALSE(ctx.parent()->parent()->parent());
+        intercepted_count++;
+    });
+
+    instance_activator activator(std::move(builder));
+    activation_context context(test_context, activator);
+    ASSERT_FALSE(context.parent());
+
+    context.activate_default_raii<component>();
+    ASSERT_EQ(intercepted_count, 1ul);
+}
+
+TEST(activation_context, ostream_operator)
+{
+    struct component
+    {
+        component(int arg0)
+        {}
+    };
+
+    definition_builder builder;
+    builder.define_type<component>();
+    builder.define_default_instance<int>(5);
+
+    auto intercepted_count = 0ul;
+    builder.define_interceptor<int>([&intercepted_count](const activation_context& ctx)
+    {
+        stringstream ss;
+        ss << ctx;
+
+        ASSERT_THAT(ss.str(), Not(IsEmpty()));
+        ASSERT_THAT(ss.str(), HasSubstr(test_context));
+        ASSERT_THAT(ss.str(), HasSubstr("parent"));
+        intercepted_count++;
+    });
+
+    instance_activator activator(std::move(builder));
+    activation_context context(test_context, activator);
+
+    stringstream ss;
+    ss << context;
+
+    ASSERT_THAT(ss.str(), Not(IsEmpty()));
+    ASSERT_THAT(ss.str(), HasSubstr(test_context));
+    ASSERT_THAT(ss.str(), Not(HasSubstr("parent")));
+
+    context.activate_default_raii<component>();
+    ASSERT_EQ(intercepted_count, 1ul);
 }
