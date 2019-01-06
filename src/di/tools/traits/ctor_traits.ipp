@@ -9,20 +9,20 @@
 namespace di { namespace tools {
 
 template <typename T, size_t... indices>
-constexpr bool try_construct(std::integer_sequence<size_t, indices...>)
+inline constexpr bool try_construct(std::integer_sequence<size_t, indices...>)
 {
     return std::is_constructible<T, arg_placeholder<T, indices>...>::value;
 }
 
 template <typename T, size_t N>
-constexpr bool has_constructor()
+inline constexpr bool has_constructor()
 {
     using sequence = std::make_integer_sequence<size_t, N>;
     return try_construct<T>(sequence());
 }
 
 template <typename T, size_t... counts>
-constexpr auto ctor_args_detect(std::integer_sequence<size_t, counts...>)
+inline constexpr auto ctor_args_detect(std::integer_sequence<size_t, counts...>)
 {
     constexpr size_t count_size = sizeof...(counts);
     std::array<bool, count_size> tested { has_constructor_n<T, counts>::value... };
@@ -31,7 +31,7 @@ constexpr auto ctor_args_detect(std::integer_sequence<size_t, counts...>)
 }
 
 template <typename T, size_t... counts>
-constexpr size_t ctor_args_count_detect(std::integer_sequence<size_t, counts...>)
+inline constexpr size_t ctor_args_count_detect(std::integer_sequence<size_t, counts...>)
 {
     constexpr size_t count_size = sizeof...(counts);
     bool detected[count_size] { has_constructor_n<T, counts>::value... };
@@ -44,14 +44,14 @@ constexpr size_t ctor_args_count_detect(std::integer_sequence<size_t, counts...>
 }
 
 template <typename T, size_t max_args>
-constexpr size_t ctor_args_count()
+inline constexpr size_t ctor_args_count()
 {
     using sequence = std::make_integer_sequence<size_t, max_args>;
     return ctor_args_count_detect<T>(sequence());
 }
 
 template <typename T, size_t... counts>
-constexpr size_t ctor_count_detect(std::integer_sequence<size_t, counts...>)
+inline constexpr size_t ctor_count_detect(std::integer_sequence<size_t, counts...>)
 {
     constexpr size_t count_size = sizeof...(counts);
     bool detected[count_size] { has_constructor_n<T, counts>::value... };
@@ -66,7 +66,7 @@ constexpr size_t ctor_count_detect(std::integer_sequence<size_t, counts...>)
 
 
 template <typename T, size_t max_args>
-constexpr size_t ctor_count()
+inline constexpr size_t ctor_count()
 {
     using sequence = std::make_integer_sequence<size_t, max_args>;
     return ctor_count_detect<T>(sequence());

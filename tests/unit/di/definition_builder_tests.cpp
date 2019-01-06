@@ -522,6 +522,35 @@ TEST(definition_builder, define_explicit_type__rvalue_constructor_args)
     ASSERT_EQ(registration.id(), sample_id);
 }
 
+TEST(definition_builder, define_type__rvalue_constructor_args__dependency)
+{
+    struct dependency
+    {
+        dependency() = default;
+        dependency(const dependency&) = delete;
+        dependency(dependency&&) = default;
+
+        dependency& operator==(const dependency&) = delete;
+    };
+
+    struct component
+    {
+        component(dependency&& a)
+            :
+                a_(std::move(a))
+        {
+        }
+
+        dependency a_;
+    };
+
+    definition_builder builder;
+    builder.define_type<dependency>();
+    auto registration = builder.define_type<component>(sample_id);
+
+    ASSERT_EQ(registration.id(), sample_id);
+}
+
 TEST(definition_builder, define_factory_with_context)
 {
     struct FactoryObject

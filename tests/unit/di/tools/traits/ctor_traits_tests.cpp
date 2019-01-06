@@ -55,6 +55,20 @@ TEST(ctor_traits, has_constructor__1_args)
         }
     };
 
+    struct test_type_3
+    {
+        test_type_3(int&& a)
+        {
+        }
+    };
+
+    struct test_type_4
+    {
+        test_type_4(int& a)
+        {
+        }
+    };
+
     {
         const bool result = has_constructor_n<test_type, 0>::value;
         ASSERT_FALSE(result);
@@ -70,7 +84,15 @@ TEST(ctor_traits, has_constructor__1_args)
         ASSERT_FALSE(result);
     }
 
-    //test_type t(arg_placeholder<test_type, 1>{});
+    {
+        const bool result = has_constructor_n<test_type_3, 1>::value;
+        ASSERT_TRUE(result);
+    }
+
+    {
+        const bool result = has_constructor_n<test_type_4, 1>::value;
+        ASSERT_FALSE(result);
+    }
 }
 
 TEST(ctor_traits, has_constructor__2_args)

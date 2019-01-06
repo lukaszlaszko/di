@@ -27,10 +27,8 @@ namespace di { namespace tools {
 template <class T, size_t index>
 struct arg_placeholder
 {
-    template <class U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
+    template <class U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value && !std::is_reference<U>::value>>
     operator U();
-    template <class U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
-    operator U&&() const;
 };
 
 template <typename T, size_t... indices>

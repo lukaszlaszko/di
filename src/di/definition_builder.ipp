@@ -306,7 +306,8 @@ inline definition_builder::registration<T> definition_builder::define_explicit_t
             [id](const activation_context& context) -> T*
             {
                 return new T(
-                        context.activate<typename argument_type<args_types>::type>(argument_id<args_types>::value)...);
+                        context.activate<
+                                typename argument_type<args_types>::type>(argument_id<args_types>::value)...);
             },
             {});
 }
@@ -676,27 +677,6 @@ template <typename U, typename _>
 inline definition_builder::magic_argument<T>::operator std::shared_ptr<U>()
 {
     return context_.activate_default<U>();
-}
-
-template <typename T>
-template <typename U, typename _>
-inline definition_builder::magic_argument<T>::operator U&() const
-{
-    throw "Not implemented";
-}
-
-template <typename T>
-template <typename U, typename _>
-inline definition_builder::magic_argument<T>::operator U&&() const
-{
-    return context_.activate_default<U>();
-}
-
-template <typename T>
-template <typename U, typename _>
-inline definition_builder::magic_argument<T>::operator const U&() const
-{
-    throw "Not implemented";
 }
 
 template <typename T, size_t... indices>

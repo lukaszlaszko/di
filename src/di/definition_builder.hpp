@@ -61,26 +61,56 @@ public:
         const std::string& id() const;
 
         /**
-         * @brief Creates a derived registration for type **T** is convertable into.
-         * @tparam D
-         * @return
+         * @brief Creates a derived registration for the base type of **T**.
+         * @details
+         * @paragraph
+         * Consider the below example:
+         * @code
+         *
+         * [...]
+         *
+         * struct BaseObject
+         * {
+         *      BaseObject(string&& id) : field1_(std::move(id))
+         *      {
+         *
+         *      }
+         *
+         *      string field1_;
+         * };
+         *
+         * struct DerivedObject : BaseObject
+         * {
+         *      DerivedObject(string&& id) : BaseObject(std::move(id))
+         *      { }
+         * };
+         *
+         * definition_builder builder;
+         * builder.define_default<DerivedObject>([]() -> DerivedObject
+         *      {
+         *          return { sample_id };
+         *      })
+         *      .as<BaseObject>();
+         *
+         * instance_activator activator(std::move(builder));
+         * auto instance = activator.activate_default_unique<BaseObject>();
+         *
+         * [...]
+         * @endcode
+         *
+         * The above registers a factory for type **BaseObject**. However, additionally call to **as** on created registration
+         * creates a drived, addtional registration for base type **BaseObject**. In this way a polimorphic registration
+         * of type can be added.
+         *
+         * @tparam D Base type, type **T** derived from.
+         * @return A polimorphic registration for type **D** with underlying implementation type **T**.
          */
         template <typename D>
         typename std::enable_if_t<std::is_base_of<D, T>::value, registration<D, args_types...>> as();
 
         /**
-         * @brief Creates a derived registration for the base type of **T**.
-         * @details
-         * @paragraph
-         * Consider this example:
-         * @code
-         *
-         *
-         *
-         * @endcode
-         *
-         *
-         * @tparam D Base type, type **T** derived from.
+         * @brief
+         * @tparam D
          * @return
          */
         template <typename D>
@@ -938,15 +968,6 @@ private:
 
         template <typename U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
         operator std::shared_ptr<U>();
-
-        template <typename U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
-        operator U&() const;
-
-        template <typename U=T, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
-        operator U&&() const;
-
-        template <typename U, typename = typename std::enable_if_t<!std::is_same<U, T>::value>>
-        operator const U&() const;
 
     private:
         const activation_context& context_;
